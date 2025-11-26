@@ -1,75 +1,45 @@
-// Base de datos del restaurante
-const baseDatos = {
-    "informacion_general": {
-        "nombre": "Restaurante Sabor Norteño",
-        "descripcion": "Restaurante de comida tradicional peruana y norteña con los mejores sabores de Chiclayo",
-        "telefono": "+51 957 246 125",
-        "email": "contacto@sabornorteno.pe"
-    },
-    "horarios": {
-        "lunes_viernes": "11:00 AM - 10:00 PM",
-        "sabados": "10:00 AM - 11:00 PM",
-        "domingos": "10:00 AM - 9:00 PM"
-    },
-    "ubicacion": {
-        "direccion": "Av. Balta 512, Centro de Chiclayo",
-        "ciudad": "Chiclayo, Lambayeque",
-        "codigo_postal": "14001",
-        "pais": "Perú"
-    },
-    "menu": {
-        "entradas": [
-            {"nombre": "Causa limeña", "precio": 18, "descripcion": "Puré de papa amarilla con pollo y mayonesa"},
-            {"nombre": "Ceviche de pescado", "precio": 25, "descripcion": "Pescado fresco en leche de tigre con camote y choclo"},
-            {"nombre": "Chicharrón de calamar", "precio": 22, "descripcion": "Calamares fritos crujientes con salsa criolla"},
-            {"nombre": "Papa a la huancaína", "precio": 15, "descripcion": "Papas bañadas en salsa de ají amarillo"}
-        ],
-        "platos_principales": [
-            {"nombre": "Arroz con pato", "precio": 32, "descripcion": "Plato típico chiclayano con pato tierno y arroz cilantrado"},
-            {"nombre": "Cabrito a la norteña", "precio": 38, "descripcion": "Cabrito guisado con frejoles y yucas"},
-            {"nombre": "Seco de cabrito", "precio": 35, "descripcion": "Cabrito en salsa de culantro con frejoles y arroz"},
-            {"nombre": "Chinguirito", "precio": 28, "descripcion": "Plato típico con guitarra seca, yucas y zarza criolla"},
-            {"nombre": "Espesado de pollo", "precio": 30, "descripcion": "Guiso espeso con pollo, zapallo y arroz"},
-            {"nombre": "Lomo saltado", "precio": 32, "descripcion": "Carne salteada con cebolla, tomate y papas fritas"},
-            {"nombre": "Aji de gallina", "precio": 28, "descripcion": "Gallina deshilachada en crema de ají amarillo"}
-        ],
-        "postres": [
-            {"nombre": "King Kong de manjar blanco", "precio": 12, "descripcion": "Dulce típico lambayecano con galletas y manjar"},
-            {"nombre": "Arroz con leche", "precio": 8, "descripcion": "Arroz cremoso con leche y canela"},
-            {"nombre": "Mazamorra morada", "precio": 7, "descripcion": "Postre de maíz morado con frutas"},
-            {"nombre": "Suspiro limeño", "precio": 10, "descripcion": "Dulce de leche con merengue"}
-        ],
-        "bebidas": [
-            {"nombre": "Chicha morada", "precio": 5, "descripcion": "Bebida de maíz morado con piña y canela"},
-            {"nombre": "Inca Kola", "precio": 4, "descripcion": "Gaseosa peruana"},
-            {"nombre": "Pisco Sour", "precio": 18, "descripcion": "Cóctel de pisco con limón"},
-            {"nombre": "Chicha de jora", "precio": 6, "descripcion": "Bebida fermentada de maíz"},
-            {"nombre": "Jugo de maracuyá", "precio": 6, "descripcion": "Jugo natural de maracuyá"},
-            {"nombre": "Emoliente", "precio": 4, "descripcion": "Bebida caliente de hierbas"}
-        ]
-    },
-    "servicios": [
-        "Delivery a domicilio",
-        "Reservaciones",
-        "Eventos y celebraciones",
-        "Para llevar",
-        "Estacionamiento disponible",
-        "WiFi gratis"
-    ],
-    "metodos_pago": [
-        "Efectivo",
-        "Tarjeta de crédito/débito",
-        "Yape",
-        "Plin",
-        "Transferencia bancaria"
-    ]
-};
+// Base de datos del restaurante - Se carga desde datos.js
+// (baseDatos se define en datos.js)
 
 // Variables globales
 let reconocimientoVoz = null;
 let escuchando = false;
 let sintesisVoz = window.speechSynthesis;
 let vozDisponible = false;
+
+// Variables para historial y estadísticas
+let historialMensajes = [];
+let estadisticasUso = {
+    totalMensajes: 0,
+    preguntasMenu: 0,
+    preguntasHorarios: 0,
+    preguntasUbicacion: 0,
+    preguntasContacto: 0,
+    preguntasDelivery: 0,
+    preguntasReservas: 0,
+    preguntasPromociones: 0,
+    preguntasValoraciones: 0,
+    platosMasConsultados: {}
+};
+
+// Cargar datos del localStorage
+function cargarDatos() {
+    const datosGuardados = localStorage.getItem('chatbotDatos');
+    if (datosGuardados) {
+        const datos = JSON.parse(datosGuardados);
+        historialMensajes = datos.historial || [];
+        estadisticasUso = datos.estadisticas || estadisticasUso;
+    }
+}
+
+// Guardar datos en localStorage
+function guardarDatos() {
+    const datos = {
+        historial: historialMensajes,
+        estadisticas: estadisticasUso
+    };
+    localStorage.setItem('chatbotDatos', JSON.stringify(datos));
+}
 
 // Verificar compatibilidad del navegador
 function verificarCompatibilidadVoz() {
@@ -290,6 +260,17 @@ function enviarMensaje() {
         const respuesta = procesarMensaje(mensaje);
         ocultarEscribiendo();
         agregarMensaje(respuesta, 'bot');
+        
+        // Registrar respuesta del bot
+        historialMensajes.push({
+            tipo: 'bot',
+            mensaje: respuesta,
+            timestamp: new Date().toLocaleTimeString()
+        });
+        
+        // Guardar datos
+        guardarDatos();
+        
         hablar(respuesta);
     }, 800);
 }
@@ -350,29 +331,76 @@ function ocultarEscribiendo() {
 // Función principal para procesar mensajes
 function procesarMensaje(mensaje) {
     const mensajeLower = mensaje.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    
+    // Registrar en historial
+    historialMensajes.push({
+        tipo: 'usuario',
+        mensaje: mensaje,
+        timestamp: new Date().toLocaleTimeString()
+    });
+    estadisticasUso.totalMensajes++;
 
     // Saludos
-    if (contienePalabras(mensajeLower, ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'saludos', 'hey', 'alo'])) {
+    if (contienePalabras(mensajeLower, ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'saludos', 'hey', 'alo', 'buenos', 'buenas'])) {
         return '¡Hola! 😊 Bienvenido al Restaurante Sabor Norteño, lo mejor de la comida peruana en Chiclayo. ¿En qué puedo ayudarte?';
     }
 
     // Despedidas
-    if (contienePalabras(mensajeLower, ['adios', 'chao', 'hasta luego', 'nos vemos', 'bye'])) {
+    if (contienePalabras(mensajeLower, ['adios', 'chao', 'hasta luego', 'nos vemos', 'bye', 'ciao', 'hasta', 'adiós'])) {
         return '¡Hasta pronto! 👋 Esperamos verte pronto en Sabor Norteño. ¡Buen provecho!';
     }
 
     // Agradecimientos
-    if (contienePalabras(mensajeLower, ['gracias', 'muchas gracias', 'te agradezco', 'excelente', 'chevere'])) {
+    if (contienePalabras(mensajeLower, ['gracias', 'muchas gracias', 'te agradezco', 'excelente', 'chevere', 'graciasss'])) {
         return '¡De nada! 😊 Estoy aquí para ayudarte. ¿Necesitas algo más?';
     }
 
+    // Preguntas frecuentes
+    if (contienePalabras(mensajeLower, ['pregunta frecuente', 'preguntas frecuentes', 'faq', 'dudas comunes'])) {
+        estadisticasUso.preguntasValoraciones++;
+        return generarRespuestaFAQ();
+    }
+
+    // Promociones y ofertas
+    if (contienePalabras(mensajeLower, ['promocion', 'promociones', 'oferta', 'ofertas', 'descuento', 'combo', 'especial'])) {
+        estadisticasUso.preguntasPromociones++;
+        return generarRespuestaPromociones();
+    }
+
+    // Reseñas y valoraciones
+    if (contienePalabras(mensajeLower, ['resena', 'reseña', 'opinion', 'opiniones', 'valoracion', 'calificacion', 'comentarios'])) {
+        estadisticasUso.preguntasValoraciones++;
+        return generarRespuestaResenas();
+    }
+
+    // Recomendaciones personalizadas
+    if (contienePalabras(mensajeLower, ['recomendacion', 'recomendaciones', 'que me recomiendas', 'que debo pedir', 'que es bueno', 'que me sugiere'])) {
+        return generarRecomendaciones(mensaje);
+    }
+
+    // Información nutricional
+    if (contienePalabras(mensajeLower, ['calorias', 'nutricion', 'nutricional', 'proteina', 'carbohidratos', 'alergeno', 'dieta', 'saludable'])) {
+        return generarRespuestaNutricional(mensaje);
+    }
+
+    // Tips gastronómicos
+    if (contienePalabras(mensajeLower, ['tip', 'tips', 'consejo', 'consejos', 'como preparar', 'receta', 'gastronomico'])) {
+        return generarRespuestaTips();
+    }
+
+    // Redes sociales
+    if (contienePalabras(mensajeLower, ['facebook', 'instagram', 'whatsapp', 'redes', 'social', 'seguir', 'contactar'])) {
+        return generarRespuestaRedesSociales();
+    }
+
     // Menú completo
-    if (contienePalabras(mensajeLower, ['menu', 'carta', 'platillos', 'comida', 'que tienen', 'que ofrecen', 'platos'])) {
+    if (contienePalabras(mensajeLower, ['menu', 'carta', 'platillos', 'comida', 'que tienen', 'que ofrecen', 'platos', 'todo el menu'])) {
+        estadisticasUso.preguntasMenu++;
         return generarRespuestaMenu();
     }
 
     // Platos típicos peruanos/norteños
-    if (contienePalabras(mensajeLower, ['tipico', 'tipicos', 'norteno', 'nortenos', 'peruano', 'peru', 'chiclayo', 'lambayeque', 'tradicional'])) {
+    if (contienePalabras(mensajeLower, ['tipico', 'tipicos', 'norteno', 'nortenos', 'peruano', 'peru', 'chiclayo', 'lambayeque', 'tradicional', 'autentico'])) {
         return '🇵🇪 <strong>Nuestros Platos Típicos Norteños:</strong><br><br>' +
                '<strong>Arroz con pato</strong> - S/ 32<br>Plato estrella chiclayano con pato tierno y arroz cilantrado<br><br>' +
                '<strong>Cabrito a la norteña</strong> - S/ 38<br>Cabrito guisado con frejoles y yucas<br><br>' +
@@ -383,77 +411,89 @@ function procesarMensaje(mensaje) {
     }
 
     // Entradas/Ceviche
-    if (contienePalabras(mensajeLower, ['entrada', 'entradas', 'aperitivo', 'ceviche', 'causa'])) {
+    if (contienePalabras(mensajeLower, ['entrada', 'entradas', 'aperitivo', 'ceviche', 'causa', 'papa a la huancaina'])) {
         return generarRespuestaCategoria('entradas', '🥗 Nuestras Entradas:');
     }
 
     // Platos principales
-    if (contienePalabras(mensajeLower, ['plato principal', 'platos principales', 'plato fuerte', 'comida principal', 'almuerzo'])) {
+    if (contienePalabras(mensajeLower, ['plato principal', 'platos principales', 'plato fuerte', 'comida principal', 'almuerzo', 'fuerte'])) {
+        estadisticasUso.preguntasMenu++;
         return generarRespuestaCategoria('platos_principales', '🍽️ Nuestros Platos Principales:');
     }
 
     // Postres
-    if (contienePalabras(mensajeLower, ['postre', 'postres', 'dulce', 'king kong', 'mazamorra'])) {
+    if (contienePalabras(mensajeLower, ['postre', 'postres', 'dulce', 'king kong', 'mazamorra', 'suspiro', 'arroz con leche'])) {
         return generarRespuestaCategoria('postres', '🍰 Nuestros Postres:');
     }
 
     // Bebidas
-    if (contienePalabras(mensajeLower, ['bebida', 'bebidas', 'tomar', 'beber', 'chicha', 'inca kola', 'pisco'])) {
+    if (contienePalabras(mensajeLower, ['bebida', 'bebidas', 'tomar', 'beber', 'chicha', 'inca kola', 'pisco', 'jugo', 'emoliente'])) {
         return generarRespuestaCategoria('bebidas', '🥤 Nuestras Bebidas:');
     }
 
     // Precios
-    if (contienePalabras(mensajeLower, ['precio', 'precios', 'costo', 'cuanto cuesta', 'cuanto vale', 'cuanto sale'])) {
+    if (contienePalabras(mensajeLower, ['precio', 'precios', 'costo', 'cuanto cuesta', 'cuanto vale', 'cuanto sale', 'valor'])) {
         return 'Nuestros precios son:<br>• Entradas: S/ 15 - S/ 25<br>• Platos principales: S/ 28 - S/ 38<br>• Postres: S/ 7 - S/ 12<br>• Bebidas: S/ 4 - S/ 18<br><br>¿Te gustaría conocer algún platillo específico?';
     }
 
     // Horarios
-    if (contienePalabras(mensajeLower, ['horario', 'horarios', 'hora', 'abierto', 'abren', 'cierran', 'que hora', 'atencion'])) {
+    if (contienePalabras(mensajeLower, ['horario', 'horarios', 'hora', 'abierto', 'abren', 'cierran', 'que hora', 'atencion', 'cuando'])) {
+        estadisticasUso.preguntasHorarios++;
         return generarRespuestaHorarios();
     }
 
     // Ubicación
-    if (contienePalabras(mensajeLower, ['ubicacion', 'direccion', 'donde estan', 'donde se encuentra', 'como llego', 'ubicado', 'donde quedan'])) {
+    if (contienePalabras(mensajeLower, ['ubicacion', 'direccion', 'donde estan', 'donde se encuentra', 'como llego', 'ubicado', 'donde quedan', 'mapa'])) {
+        estadisticasUso.preguntasUbicacion++;
         return generarRespuestaUbicacion();
     }
 
     // Contacto
-    if (contienePalabras(mensajeLower, ['telefono', 'contacto', 'llamar', 'numero', 'email', 'correo', 'celular'])) {
+    if (contienePalabras(mensajeLower, ['telefono', 'contacto', 'llamar', 'numero', 'email', 'correo', 'celular', 'comunicarse'])) {
+        estadisticasUso.preguntasContacto++;
         return generarRespuestaContacto();
     }
 
     // Servicios
-    if (contienePalabras(mensajeLower, ['servicio', 'servicios', 'ofrece', 'ofrecen', 'disponible'])) {
+    if (contienePalabras(mensajeLower, ['servicio', 'servicios', 'ofrece', 'ofrecen', 'disponible', 'que hacen'])) {
         return generarRespuestaServicios();
     }
 
     // Reservaciones
-    if (contienePalabras(mensajeLower, ['reservacion', 'reservar', 'reserva', 'apartar'])) {
-        return '📞 Para hacer una reservación, puedes llamarnos al ' + baseDatos.informacion_general.telefono + ' o enviarnos un correo a ' + baseDatos.informacion_general.email + '. ¡Estaremos encantados de atenderte!';
+    if (contienePalabras(mensajeLower, ['reservacion', 'reservar', 'reserva', 'apartar', 'grupo', 'evento', 'cumpleaños'])) {
+        estadisticasUso.preguntasReservas++;
+        return generarRespuestaReservas();
     }
 
     // Domicilio/Delivery
-    if (contienePalabras(mensajeLower, ['domicilio', 'delivery', 'entrega', 'llevar', 'para llevar', 'pedido'])) {
-        return '🛵 ¡Claro! Tenemos delivery a domicilio en Chiclayo y servicio para llevar. Llámanos al ' + baseDatos.informacion_general.telefono + ' para hacer tu pedido. ¡Te lo llevamos caliente!';
+    if (contienePalabras(mensajeLower, ['domicilio', 'delivery', 'entrega', 'llevar', 'para llevar', 'pedido', 'envio'])) {
+        estadisticasUso.preguntasDelivery++;
+        return generarRespuestaDelivery();
     }
 
     // Métodos de pago (incluyendo Yape y Plin)
-    if (contienePalabras(mensajeLower, ['pago', 'pagar', 'aceptan', 'tarjeta', 'efectivo', 'como pago', 'yape', 'plin'])) {
+    if (contienePalabras(mensajeLower, ['pago', 'pagar', 'aceptan', 'tarjeta', 'efectivo', 'como pago', 'yape', 'plin', 'transferencia'])) {
         return generarRespuestaPago();
     }
 
     // Estacionamiento
-    if (contienePalabras(mensajeLower, ['estacionamiento', 'parking', 'donde estacionar', 'parqueo', 'cochera'])) {
+    if (contienePalabras(mensajeLower, ['estacionamiento', 'parking', 'donde estacionar', 'parqueo', 'cochera', 'auto', 'carro'])) {
         return '🚗 Contamos con estacionamiento disponible para nuestros clientes. ¡Ven tranquilo!';
     }
 
     // WiFi
-    if (contienePalabras(mensajeLower, ['wifi', 'internet', 'contraseña wifi', 'red', 'clave'])) {
+    if (contienePalabras(mensajeLower, ['wifi', 'internet', 'contraseña wifi', 'red', 'clave', 'conexion'])) {
         return '📶 Ofrecemos WiFi gratis para todos nuestros clientes. Pregunta por la contraseña al mesero.';
     }
 
+    // Búsqueda de platos específicos
+    const platoBuscado = buscarPlatoEspecifico(mensaje);
+    if (platoBuscado) {
+        return platoBuscado;
+    }
+
     // Respuesta por defecto
-    return 'Disculpa, no estoy seguro de entender tu pregunta. 🤔<br><br>Puedo ayudarte con:<br>• Menú y platos típicos<br>• Precios<br>• Horarios<br>• Ubicación y contacto<br>• Delivery y reservas<br>• Métodos de pago<br><br>¿Sobre qué te gustaría saber?';
+    return 'Disculpa, no estoy seguro de entender tu pregunta. 🤔<br><br>Puedo ayudarte con:<br>• Menú y platos típicos<br>• Precios y promociones<br>• Horarios y ubicación<br>• Contacto y reservas<br>• Delivery y métodos de pago<br>• Reseñas y recomendaciones<br>• Información nutricional<br><br>¿Sobre qué te gustaría saber?';
 }
 
 // Función auxiliar para verificar palabras clave
@@ -543,9 +583,187 @@ function generarRespuestaPago() {
     return respuesta;
 }
 
+// Generar respuesta de promociones
+function generarRespuestaPromociones() {
+    let respuesta = '🎉 <strong>Nuestras Promociones Especiales:</strong><br><br>';
+    baseDatos.promociones.forEach(promo => {
+        respuesta += `<strong>${promo.titulo}</strong> - ${promo.descuento} OFF<br>`;
+        respuesta += `${promo.descripcion}<br>`;
+        respuesta += `Antes: S/ ${promo.precio_original} → Ahora: S/ ${promo.precio_descuento}<br><br>`;
+    });
+    respuesta += '¡Aprovecha nuestras ofertas! 💰';
+    return respuesta;
+}
+
+// Generar respuesta de reseñas
+function generarRespuestaResenas() {
+    let respuesta = '⭐ <strong>Lo que dicen nuestros clientes:</strong><br><br>';
+    baseDatos.resenas.forEach(resena => {
+        respuesta += `<strong>${resena.cliente}</strong> - ${'⭐'.repeat(resena.calificacion)}<br>`;
+        respuesta += `"${resena.comentario}"<br>`;
+        respuesta += `<em>${resena.fecha}</em><br><br>`;
+    });
+    return respuesta;
+}
+
+// Generar respuesta de preguntas frecuentes
+function generarRespuestaFAQ() {
+    let respuesta = '❓ <strong>Preguntas Frecuentes:</strong><br><br>';
+    baseDatos.preguntas_frecuentes.forEach((faq, index) => {
+        respuesta += `<strong>${index + 1}. ${faq.pregunta}</strong><br>`;
+        respuesta += `${faq.respuesta}<br><br>`;
+    });
+    return respuesta;
+}
+
+// Generar recomendaciones personalizadas
+function generarRecomendaciones(mensaje) {
+    const mensajeLower = mensaje.toLowerCase();
+    
+    if (contienePalabras(mensajeLower, ['primera vez', 'primera', 'nuevo', 'primeriza'])) {
+        let respuesta = '🌟 <strong>Recomendaciones para tu Primera Visita:</strong><br><br>';
+        baseDatos.recomendaciones_por_ocasion.primera_vez.forEach(plato => {
+            respuesta += `✓ ${plato}<br>`;
+        });
+        return respuesta;
+    }
+    
+    if (contienePalabras(mensajeLower, ['rapido', 'rápido', 'almuerzo', 'prisa', 'rapida'])) {
+        let respuesta = '⚡ <strong>Recomendaciones para Almuerzo Rápido:</strong><br><br>';
+        baseDatos.recomendaciones_por_ocasion.almuerzo_rapido.forEach(plato => {
+            respuesta += `✓ ${plato}<br>`;
+        });
+        return respuesta;
+    }
+    
+    if (contienePalabras(mensajeLower, ['cena', 'especial', 'noche', 'romantica', 'pareja'])) {
+        let respuesta = '🌙 <strong>Recomendaciones para Cena Especial:</strong><br><br>';
+        baseDatos.recomendaciones_por_ocasion.cena_especial.forEach(plato => {
+            respuesta += `✓ ${plato}<br>`;
+        });
+        return respuesta;
+    }
+    
+    if (contienePalabras(mensajeLower, ['grupo', 'amigos', 'familia', 'compartir'])) {
+        let respuesta = '👥 <strong>Recomendaciones para Grupo de Amigos:</strong><br><br>';
+        baseDatos.recomendaciones_por_ocasion.grupo_amigos.forEach(plato => {
+            respuesta += `✓ ${plato}<br>`;
+        });
+        return respuesta;
+    }
+    
+    // Recomendación general
+    let respuesta = '💡 <strong>Nuestras Recomendaciones:</strong><br><br>';
+    respuesta += '✓ Arroz con pato - Nuestro plato estrella<br>';
+    respuesta += '✓ Ceviche de pescado - Clásico peruano<br>';
+    respuesta += '✓ Combo Norteño - Mejor relación precio-calidad<br>';
+    respuesta += '✓ King Kong - Postre típico lambayecano<br><br>';
+    respuesta += '¿Cuál te atrae más?';
+    return respuesta;
+}
+
+// Generar respuesta nutricional
+function generarRespuestaNutricional(mensaje) {
+    const mensajeLower = mensaje.toLowerCase();
+    
+    for (const [plato, info] of Object.entries(baseDatos.informacion_nutricional)) {
+        if (mensajeLower.includes(plato.toLowerCase())) {
+            return `📊 <strong>Información Nutricional - ${plato}:</strong><br><br>` +
+                   `🔥 Calorías: ${info.calorias}<br>` +
+                   `💪 Proteína: ${info.proteina}<br>` +
+                   `🌾 Carbohidratos: ${info.carbohidratos}<br>` +
+                   `🧈 Grasas: ${info.grasas}<br>` +
+                   `⚠️ Alergenos: ${info.alergenos}<br><br>` +
+                   `¿Te gustaría conocer la información de otro plato?`;
+        }
+    }
+    
+    let respuesta = '📊 <strong>Información Nutricional Disponible:</strong><br><br>';
+    for (const plato of Object.keys(baseDatos.informacion_nutricional)) {
+        respuesta += `• ${plato}<br>`;
+    }
+    respuesta += '<br>Pregunta por el plato que te interesa.';
+    return respuesta;
+}
+
+// Generar respuesta de tips gastronómicos
+function generarRespuestaTips() {
+    let respuesta = '👨‍🍳 <strong>Tips Gastronómicos:</strong><br><br>';
+    baseDatos.tips_gastronomicos.forEach((tip, index) => {
+        respuesta += `${index + 1}. ${tip}<br><br>`;
+    });
+    return respuesta;
+}
+
+// Generar respuesta de redes sociales
+function generarRespuestaRedesSociales() {
+    const redes = baseDatos.informacion_general.redes_sociales;
+    return `📱 <strong>Síguenos en Redes Sociales:</strong><br><br>` +
+           `📘 Facebook: ${redes.facebook}<br>` +
+           `📷 Instagram: ${redes.instagram}<br>` +
+           `💬 WhatsApp: ${redes.whatsapp}<br><br>` +
+           `¡Mantente actualizado con nuestras promociones y novedades!`;
+}
+
+// Generar respuesta de delivery
+function generarRespuestaDelivery() {
+    return '🛵 <strong>Servicio de Delivery:</strong><br><br>' +
+           '✓ Entregamos en toda Chiclayo<br>' +
+           '✓ Tiempo de entrega: 30-45 minutos<br>' +
+           '✓ Costo de envío: S/ 5 (menores a S/ 50) | Gratis (mayores a S/ 50)<br>' +
+           '✓ Pedidos mínimos: S/ 30<br><br>' +
+           '📞 Llámanos al ' + baseDatos.informacion_general.telefono + ' para hacer tu pedido<br>' +
+           '💬 O contáctanos por WhatsApp<br><br>' +
+           '¡Te lo llevamos caliente y fresco!';
+}
+
+// Generar respuesta de reservas
+function generarRespuestaReservas() {
+    return '📞 <strong>Reservaciones:</strong><br><br>' +
+           '✓ Aceptamos reservaciones para grupos<br>' +
+           '✓ Se recomienda reservar con 24 horas de anticipación<br>' +
+           '✓ Grupos mayores a 6 personas: reserva obligatoria<br>' +
+           '✓ Organizamos eventos, cumpleaños y celebraciones<br><br>' +
+           '📞 Teléfono: ' + baseDatos.informacion_general.telefono + '<br>' +
+           '📧 Email: ' + baseDatos.informacion_general.email + '<br>' +
+           '💬 WhatsApp: ' + baseDatos.informacion_general.redes_sociales.whatsapp + '<br><br>' +
+           '¡Estaremos encantados de atenderte!';
+}
+
+// Buscar platos específicos
+function buscarPlatoEspecifico(mensaje) {
+    const mensajeLower = mensaje.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    
+    // Buscar en todas las categorías
+    for (const [categoria, platos] of Object.entries(baseDatos.menu)) {
+        if (Array.isArray(platos)) {
+            for (const plato of platos) {
+                const nombrePlato = plato.nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+                if (mensajeLower.includes(nombrePlato)) {
+                    // Registrar en estadísticas
+                    if (!estadisticasUso.platosMasConsultados[plato.nombre]) {
+                        estadisticasUso.platosMasConsultados[plato.nombre] = 0;
+                    }
+                    estadisticasUso.platosMasConsultados[plato.nombre]++;
+                    
+                    return `🍽️ <strong>${plato.nombre}</strong> - S/ ${plato.precio}<br><br>` +
+                           `${plato.descripcion}<br><br>` +
+                           `¿Te gustaría saber más sobre este plato o hacer un pedido?`;
+                }
+            }
+        }
+    }
+    
+    return null;
+}
+
 // Inicializar cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando chatbot...');
+
+    // Cargar datos guardados
+    cargarDatos();
+    console.log('✓ Datos cargados');
 
     // Verificar y configurar reconocimiento de voz
     if (verificarCompatibilidadVoz()) {
@@ -564,4 +782,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     console.log('✓ Chatbot inicializado correctamente');
+    console.log('📊 Total de mensajes en historial:', historialMensajes.length);
 });
