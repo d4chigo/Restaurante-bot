@@ -1,0 +1,149 @@
+{
+  "informacion_general": {
+    "nombre": "Restaurante Sabor Norteño",
+    "descripcion": "Restaurante de comida tradicional peruana y norteña con los mejores sabores de Chiclayo",
+    "telefono": "+51 957 246 125",
+    "email": "contacto@sabornorteno.pe"
+  },
+  "horarios": {
+    "lunes_viernes": "11:00 AM - 10:00 PM",
+    "sabados": "10:00 AM - 11:00 PM",
+    "domingos": "10:00 AM - 9:00 PM"
+  },
+  "ubicacion": {
+    "direccion": "Av. Balta 512, Centro de Chiclayo",
+    "ciudad": "Chiclayo, Lambayeque",
+    "codigo_postal": "14001",
+    "pais": "Perú"
+  },
+  "menu": {
+    "entradas": [
+      {
+        "nombre": "Causa limeña",
+        "precio": 18,
+        "descripcion": "Puré de papa amarilla con pollo y mayonesa"
+      },
+      {
+        "nombre": "Ceviche de pescado",
+        "precio": 25,
+        "descripcion": "Pescado fresco en leche de tigre con camote y choclo"
+      },
+      {
+        "nombre": "Chicharrón de calamar",
+        "precio": 22,
+        "descripcion": "Calamares fritos crujientes con salsa criolla"
+      },
+      {
+        "nombre": "Papa a la huancaína",
+        "precio": 15,
+        "descripcion": "Papas bañadas en salsa de ají amarillo"
+      }
+    ],
+    "platos_principales": [
+      {
+        "nombre": "Arroz con pato",
+        "precio": 32,
+        "descripcion": "Plato típico chiclayano con pato tierno y arroz cilantrado"
+      },
+      {
+        "nombre": "Cabrito a la norteña",
+        "precio": 38,
+        "descripcion": "Cabrito guisado con frejoles y yucas"
+      },
+      {
+        "nombre": "Seco de cabrito",
+        "precio": 35,
+        "descripcion": "Cabrito en salsa de culantro con frejoles y arroz"
+      },
+      {
+        "nombre": "Chinguirito",
+        "precio": 28,
+        "descripcion": "Plato típico con guitarra seca, yucas y zarza criolla"
+      },
+      {
+        "nombre": "Espesado de pollo",
+        "precio": 30,
+        "descripcion": "Guiso espeso con pollo, zapallo y arroz"
+      },
+      {
+        "nombre": "Lomo saltado",
+        "precio": 32,
+        "descripcion": "Carne salteada con cebolla, tomate y papas fritas"
+      },
+      {
+        "nombre": "Aji de gallina",
+        "precio": 28,
+        "descripcion": "Gallina deshilachada en crema de ají amarillo"
+      }
+    ],
+    "postres": [
+      {
+        "nombre": "King Kong de manjar blanco",
+        "precio": 12,
+        "descripcion": "Dulce típico lambayecano con galletas y manjar"
+      },
+      {
+        "nombre": "Arroz con leche",
+        "precio": 8,
+        "descripcion": "Arroz cremoso con leche y canela"
+      },
+      {
+        "nombre": "Mazamorra morada",
+        "precio": 7,
+        "descripcion": "Postre de maíz morado con frutas"
+      },
+      {
+        "nombre": "Suspiro limeño",
+        "precio": 10,
+        "descripcion": "Dulce de leche con merengue"
+      }
+    ],
+    "bebidas": [
+      {
+        "nombre": "Chicha morada",
+        "precio": 5,
+        "descripcion": "Bebida de maíz morado con piña y canela"
+      },
+      {
+        "nombre": "Inca Kola",
+        "precio": 4,
+        "descripcion": "Gaseosa peruana"
+      },
+      {
+        "nombre": "Pisco Sour",
+        "precio": 18,
+        "descripcion": "Cóctel de pisco con limón"
+      },
+      {
+        "nombre": "Chicha de jora",
+        "precio": 6,
+        "descripcion": "Bebida fermentada de maíz"
+      },
+      {
+        "nombre": "Jugo de maracuyá",
+        "precio": 6,
+        "descripcion": "Jugo natural de maracuyá"
+      },
+      {
+        "nombre": "Emoliente",
+        "precio": 4,
+        "descripcion": "Bebida caliente de hierbas"
+      }
+    ]
+  },
+  "servicios": [
+    "Delivery a domicilio",
+    "Reservaciones",
+    "Eventos y celebraciones",
+    "Para llevar",
+    "Estacionamiento disponible",
+    "WiFi gratis"
+  ],
+  "metodos_pago": [
+    "Efectivo",
+    "Tarjeta de crédito/débito",
+    "Yape",
+    "Plin",
+    "Transferencia bancaria"
+  ]
+}

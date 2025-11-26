@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Restaurante Sabor Norteño</title>
+    <link rel="stylesheet" href="chatbot.css">
+</head>
+<body>
+    <div class="contenedor-chat">
+        <div class="encabezado-chat">
+            <h1>🍽️ Restaurante Sabor Norteño</h1>
+            <p>Comida peruana tradicional de Chiclayo</p>
+        </div>
+
+        <div class="sugerencias" id="sugerencias">
+            <div class="sugerencia" onclick="enviarSugerencia('¿Cuál es el menú?')">📋 Menú</div>
+            <div class="sugerencia" onclick="enviarSugerencia('¿Cuáles son los horarios?')">🕐 Horarios</div>
+            <div class="sugerencia" onclick="enviarSugerencia('¿Dónde están ubicados?')">📍 Ubicación</div>
+            <div class="sugerencia" onclick="enviarSugerencia('Platos típicos')">🇵🇪 Típicos</div>
+        </div>
+
+        <div class="area-mensajes" id="areaMensajes">
+            <div class="mensaje bot">
+                <div class="burbuja-mensaje">
+                    ¡Bienvenido al Restaurante Sabor Norteño! 👋<br><br>
+                    Somos un restaurante de comida tradicional peruana y norteña en el corazón de Chiclayo.<br><br>
+                    Puedo ayudarte con información sobre:<br>
+                    • Menú y precios<br>
+                    • Horarios de atención<br>
+                    • Ubicación y contacto<br>
+                    • Platos típicos lambayecanos<br>
+                    • Servicios y delivery<br><br>
+                    💡 <strong>Tip:</strong> Puedes escribir o usar el micrófono 🎤
+                </div>
+            </div>
+        </div>
+
+        <div class="area-entrada">
+            <input type="text" 
+                   class="campo-entrada" 
+                   id="campoEntrada" 
+                   placeholder="Escribe tu pregunta aquí..."
+                   onkeypress="manejarEnter(event)">
+            <button class="boton" onclick="enviarMensaje()">Enviar</button>
+            <button class="boton boton-voz" id="botonVoz" onclick="alternarReconocimientoVoz()" title="Hablar">
+                🎤
+                <div class="estado-voz" id="estadoVoz"></div>
+            </button>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+</body>
+</html>
